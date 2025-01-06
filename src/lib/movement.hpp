@@ -1,7 +1,7 @@
 #pragma once
 #include "vec3.hpp"
 #include <raylib.h>
-#define TDEBUG false
+#define TDEBUG true
 
 
 void logVec3(vec3 vecToLog, std::string label) {
@@ -10,7 +10,7 @@ void logVec3(vec3 vecToLog, std::string label) {
 }
 
 
-class AOTMovement {
+class TMovement {
     private:
         vec3 position = vec3(0, .52, -5);
         vec3 speed = vec3(0);
@@ -19,7 +19,6 @@ class AOTMovement {
         vec3 strafevec = vec3(0);
         float floorheight = .5;
         float frameTime = 0;
-
         bool debug = false;
 
         void DBGLOG(std::string msg) {
@@ -33,14 +32,19 @@ class AOTMovement {
             }
         }
 
+        bool IsonGround() {
+            return (abs(position.y()-floorheight)<.01f);
+        }
         void input() {
-            if (IsKeyDown(forwardKey))   MoveForward();
-            if (IsKeyDown(backwadsKey))  MoveBackward();
-            //if (IsKeyDown(turnRightKey)) turnRight();
-            //if (IsKeyDown(turnLeftKey)) turnLeft();
-            if (IsKeyDown(MoveLeftKey)) MoveLeft();
-            if (IsKeyDown(MoveRightKey)) MoveRight();
-            if (IsKeyPressed(JumpKey)) Jump();
+            if (IsonGround()) {
+                if (IsKeyDown(forwardKey))   MoveForward();
+                if (IsKeyDown(backwadsKey))  MoveBackward();
+                //if (IsKeyDown(turnRightKey)) turnRight();
+                //if (IsKeyDown(turnLeftKey)) turnLeft();
+                if (IsKeyDown(MoveLeftKey))  MoveLeft();
+                if (IsKeyDown(MoveRightKey)) MoveRight();
+                //if (IsKeyPressed(JumpKey))   Jump();
+            }
         }
         void MoveForward() {
             acceleration+=dirvec*accelSpeed*vec3(1,0,1);
@@ -59,11 +63,10 @@ class AOTMovement {
         }
 
         void Jump() {
-            if (abs(position.y()-floorheight)<.01f) {
-                acceleration+=vec3(0, 500, 0);
+            if (IsonGround()) {
+                acceleration+=vec3(0, 200, 0);
             }
         }
-
     public:
         vec3 dirvec = vec3(0);
         float upAngle = 0;
@@ -75,11 +78,10 @@ class AOTMovement {
         int MoveLeftKey = KEY_A;
         int MoveRightKey = KEY_D;
         int JumpKey = KEY_SPACE;
-        float accelSpeed = 5;
+        float accelSpeed = 10;
         float deceleration = 1;
         float height = 0;
         float fov = 60;
-
 
         Vector3 update(float frametime) {
             frameTime = frametime;
@@ -89,7 +91,7 @@ class AOTMovement {
             
             gravity = vec3(0, position.y()-floorheight, 0);
             acceleration-=gravity;
-            if (position.y()<floorheight || abs(floorheight-position.y())<.01f) {
+            if (position.y()<floorheight || abs(floorheight-position.y())<.02f) {
                 DBGLOG("Resetting to groundHeight");
                 position.e[1]=floorheight;
             }
@@ -100,16 +102,13 @@ class AOTMovement {
             position+=speed*frametime;
             speed+=acceleration*frametime;
             
-            if (position.y()<1)//If on ground
+            if (IsonGround())//If on ground
                 speed-=5*speed*frameTime;//decelerate
-
-            //position += speed * frametime + 0.5 * acceleration * frametime * frametime;
-            //speed += acceleration * frametime;
 
             fov = 60+speed.length()*.2f;
 
             acceleration = 0;
-            logVec3(position, "Actual movement position: ");
+            //logVec3(position, "Actual movement position: ");
             
             //std::clog << position.x() << " : " << position.z() << "\n";
             return position.toRayVec();

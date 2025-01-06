@@ -29,11 +29,6 @@ void main()
     float diff = max(dot(norm, lightDir), 0.0);//Raw diffused value
     vec3 diffuse = diff * ambientColor;//Final Diffused Value
 
-    if (fragPosition.y>80*scale) {//Lazy ass-dumbass way to give the trees color lmao
-        col = vec4(0.0353, 0.1686, 0.0157, 1.0);
-    } else {
-        col = vec4(0.1451, 0.0745, 0.0275, 1.0);
-    }
     //col.xyz -= vec3(dist*.0002);
 
     //Shadow

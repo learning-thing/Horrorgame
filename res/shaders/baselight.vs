@@ -26,8 +26,10 @@ void main()
     //Wind effect
     float posEffect = 5;
     
+    /*
     float offset = sin(  iTime+fragPosition.x )*.5;
     fragPosition += vec3(0, offset, 0);
+    */
 
     fragNormal = vertexNormal;
     fragColor = vertexColor;

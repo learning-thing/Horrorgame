@@ -1,6 +1,7 @@
 #include <iostream>
 #include <raylib.h>
 #include "movement.hpp"
+#include <npc.hpp>
 
 int main() {
     std::cout << "hello world\n";
@@ -16,6 +17,8 @@ int main() {
 
     Shader BasicLighting = LoadShader("res/shaders/baselight.vs", "res/shaders/baselight.fs");
     Shader PostFX = LoadShader(0, "res/shaders/post_processing.fs");
+    Model map = LoadModel("res/City.glb");
+    map.materials[0].shader = BasicLighting;
     Vector3 LightPos = (Vector3){0, 10, 0};
 
     int MatModelLoc = GetShaderLocation(BasicLighting, "matModel");
@@ -28,8 +31,10 @@ int main() {
 
     Vector3 ambientColor = (Vector3){1, 1, 1};
 
-    AOTMovement movement;
+    TMovement movement;
     Camera3D camera;
+    Enemy e;
+    Ally a;
     camera.position = (Vector3){ 0.0f, 3.0f, -3.0f };
     camera.target = (Vector3){ 0.0f, 3.0f, 0.0f };
     camera.up = (Vector3){ 0.0f, 1.0f, 0.0f };
@@ -49,21 +54,35 @@ int main() {
         //Update Stuff
         iTime+=GetFrameTime();
         camera.target = movement.CamTargPos().toRayVec();
-        movement.rotation = -(float)GetMouseX()/1000;
-        movement.upAngle = (float)GetMouseY()/1000;
+        if (IsCursorHidden()) {
+            movement.rotation = -(float)GetMouseX()/1000;
+            movement.upAngle = -(float)GetMouseY()/1000;
+        }
         LightPos = camera.position;
         SetShaderValue(BasicLighting, camPosLoc, &camera.position, SHADER_UNIFORM_VEC3);
         SetShaderValue(BasicLighting, iTimeLoc, &iTime, SHADER_UNIFORM_FLOAT);
         camera.position = movement.update(GetFrameTime());
 
+        if (IsKeyPressed(KEY_LEFT_ALT)) {
+            if (IsCursorHidden()) {
+                EnableCursor();
+            } else {
+                DisableCursor();
+            }
+        }
+
         camera.fovy+=(movement.fov-camera.fovy)*.5;
-        BeginTextureMode(PostProcessingLayer);
-            //Draw Stuff
+        BeginTextureMode(PostProcessingLayer);//"open" postfx layer
+            //Draw Stuff with post processing
             ClearBackground((Color){10, 10, 18});
 
             BeginMode3D(camera);
                 BeginShaderMode(BasicLighting);
                     DrawPlane((Vector3){0, 0, 0}, (Vector2){10, 10}, WHITE);
+                    //DrawModel(map, (Vector3){0, 0, 0}, .2, WHITE);
+                    
+                    a.update(movement.getPos());
+                    e.update(movement.getPos(), movement.CamTargOffset(1));
                 EndShaderMode();
             EndMode3D();
         EndTextureMode();
